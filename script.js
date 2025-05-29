@@ -25,11 +25,11 @@ fetch('questions.json')
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return response.json();  // <-- parse JSON here
+    return response.json(); // parse JSON response
   })
   .then(data => {
     console.log('Questions JSON loaded:', data);
-    questions = data; // assign JSON array directly
+    questions = data;  // assign directly since your JSON is already in correct format
     if (questions.length > 0) {
       shuffleArray(questions);
       showQuestion();
@@ -41,6 +41,7 @@ fetch('questions.json')
     questionEl.textContent = "Failed to load questions.";
     console.error(err);
   });
+
 
 function parseQuestions(text) {
   const blocks = text.trim().split(/\n(?=\d+\.)/);
