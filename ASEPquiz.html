@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Practice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+    .quiz-container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .info-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .question {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+    .option {
+      border: 2px solid #ccc;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .option.correct {
+      border-color: green;
+      background-color: #e0ffe0;
+    }
+    .option.incorrect {
+      border-color: red;
+      background-color: #ffe0e0;
+    }
+    .option:hover {
+      background: #f0f0f0;
+    }
+    .next-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="quiz-container">
+  <div class="info-bar">
+    <div>Σκορ: <span id="score">0</span></div>
+    <div>Χρόνος: <span id="timer">0</span>s</div>
+  </div>
+  <div id="question-container">
+    <div class="question" id="question"></div>
+    <div id="options"></div>
+  </div>
+  <button class="next-btn" id="next-btn" disabled>Επόμενη Ερώτηση</button>
+</div>
+
+<script>
+  let questions = [];
+  let shuffledQuestions = [];
+  let currentIndex = 0;
+  let score = 0;
+  let timer = 0;
+  let interval;
+
+  const scoreEl = document.getElementById("score");
+  const timerEl = document.getElementById("timer");
+  const questionEl = document.getElementById('question');
+  const optionsEl = document.getElementById('options');
+  const nextBtn = document.getElementById('next-btn');
+
+  function shuffleArray(array) {
+    return array.sort(() => Math.random() - 0.5);
+  }
+
+  function showQuestion() {
+    const currentQuestion = shuffledQuestions[currentIndex];
+    questionEl.textContent = currentQuestion.question;
+    optionsEl.innerHTML = "";
+
+    const shuffledOptions = shuffleArray([...currentQuestion.options]);
+    shuffledOptions.forEach(option => {
+      const btn = document.createElement("div");
+      btn.classList.add("option");
+      btn.textContent = option.text;
+      btn.onclick = () => selectAnswer(btn, option.correct);
+      optionsEl.appendChild(btn);
+    });
+
+    nextBtn.disabled = true;
+  }
+
+  function selectAnswer(selectedBtn, isCorrect) {
+    const allOptions = document.querySelectorAll(".option");
+    allOptions.forEach(btn => btn.onclick = null);
+
+    if (isCorrect) {
+      selectedBtn.classList.add("correct");
+      score++;
+      scoreEl.textContent = score;
+    } else {
+      selectedBtn.classList.add("incorrect");
+      const correctBtn = [...allOptions].find(btn =>
+        shuffledQuestions[currentIndex].options.find(opt => opt.correct && opt.text === btn.textContent)
+      );
+      if (correctBtn) correctBtn.classList.add("correct");
+    }
+
+    nextBtn.disabled = false;
+  }
+
+  function nextQuestion() {
+    currentIndex++;
+    if (currentIndex < shuffledQuestions.length) {
+      showQuestion();
+    } else {
+      clearInterval(interval);
+      questionEl.textContent = `Τέλος! Τελικό σκορ: ${score}/${shuffledQuestions.length}`;
+      optionsEl.innerHTML = "";
+      nextBtn.disabled = true;
+    }
+  }
+
+  function startTimer() {
+    timer = 0;
+    timerEl.textContent = timer;
+    interval = setInterval(() => {
+      timer++;
+      timerEl.textContent = timer;
+    }, 1000);
+  }
+
+  function startQuiz() {
+    shuffledQuestions = shuffleArray([...questions]);
+    currentIndex = 0;
+    score = 0;
+    scoreEl.textContent = score;
+    nextBtn.disabled = false;
+    showQuestion();
+    startTimer();
+  }
+
+  nextBtn.addEventListener("click", nextQuestion);
+
+  // Fetch questions from questions.json
+  fetch("questions.json")
+    .then(response => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then(data => {
+      questions = data;
+      startQuiz();
+    })
+    .catch(error => {
+      questionEl.textContent = "Αποτυχία φόρτωσης ερωτήσεων.";
+      console.error("Fetch error:", error);
+    });
+</script>
+
+</body>
+</html>
