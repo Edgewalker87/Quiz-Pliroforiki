@@ -20,17 +20,16 @@ let answered = false;
 let incorrectAnswers = [];
 let delayTimeout;
 
-fetch('questionsPDF.txt')
+fetch('questions.json')
   .then(response => {
     if (!response.ok) {
       throw new Error('Network response was not ok');
     }
-    return response.text();
+    return response.json();  // <-- parse JSON here
   })
-  .then(text => {
-    console.log('Questions file loaded:', text);
-    questions = parseQuestions(text);
-    console.log('Parsed questions:', questions);
+  .then(data => {
+    console.log('Questions JSON loaded:', data);
+    questions = data; // assign JSON array directly
     if (questions.length > 0) {
       shuffleArray(questions);
       showQuestion();
